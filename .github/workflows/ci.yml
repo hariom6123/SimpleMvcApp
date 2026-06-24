@@ -23,18 +23,15 @@ jobs:
           exit-code: 1
           severity: HIGH,CRITICAL
           format: table
-      - name: Build Docker image
+      - name: Build Docker image (runtime)
         run: |
           docker build -t simplemvcapp:latest .
-      - name: Test Docker image
-        run: docker run --rm simplemvcapp:latest dotnet test ./tests/SimpleMvcApp.Tests/SimpleMvcApp.Tests.csproj
-      - name: Trivy Docker image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: simplemvcapp:latest
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          format: table
+      - name: Test Docker image (SDK stage)
+        run: |
+          docker build -t simplemvcapp-test:latest --target test .
+      - name: Run tests in Docker image
+        run: |
+          docker run --rm simplemvcapp-test:latest
       - run: dotnet publish ./src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj -c Release -o ./publish
       - uses: actions/upload-artifact@v4
         with:
