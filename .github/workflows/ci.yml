@@ -10,44 +10,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
-
-      - name: Restore
-        run: dotnet restore SimpleMvcApp.sln
-
-      - name: Build
-        run: dotnet build SimpleMvcApp.sln --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test tests/SimpleMvcApp.Tests/SimpleMvcApp.Tests.csproj --configuration Release --no-build --verbosity normal
-
-      - name: Publish Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: TestResults
-          path: tests/**/*.trx
-
-      - name: Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@master
+      - run: dotnet restore ./SimpleMvcApp.sln
+      - run: dotnet build ./SimpleMvcApp.sln --configuration Release --no-restore
+      - uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
           path: .
           exit-code: 1
           severity: HIGH,CRITICAL
           format: table
-
-      - name: Publish Application
-        run: dotnet publish src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj -c Release -o ./publish
-
-      - name: Upload Artifact
+      - run: dotnet publish ./src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj -c Release -o ./publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publish
+          path: ./publish
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - run: dotnet test ./tests/SimpleMvcApp.Tests/SimpleMvcApp.Tests.csproj --configuration Release --no-build --verbosity normal
+      - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: tests/**/*.trx
+  upload_artifact:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built application
+        uses: actions/download-artifact@v4
+        with:
+          name: publish
+          path: ./publish
+      - uses: actions/upload-artifact@v4
         with:
           name: SimpleMvcApp
           path: ./publish
