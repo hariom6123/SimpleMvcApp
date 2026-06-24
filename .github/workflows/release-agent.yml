@@ -14,7 +14,7 @@ jobs:
 
       - name: Package Application
         run: |
-          mkdir publish
+          mkdir -p publish
           echo "Release Package" > publish/release.txt
 
       - name: Publish Artifact
