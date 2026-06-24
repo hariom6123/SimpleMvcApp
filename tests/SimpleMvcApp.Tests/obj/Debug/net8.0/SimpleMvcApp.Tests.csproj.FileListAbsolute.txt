@@ -1,0 +1,5 @@
+C:\SimpleMvcApp\tests\SimpleMvcApp.Tests\obj\Debug\net8.0\SimpleMvcApp.Tests.csproj.AssemblyReference.cache
+C:\SimpleMvcApp\tests\SimpleMvcApp.Tests\obj\Debug\net8.0\SimpleMvcApp.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\SimpleMvcApp\tests\SimpleMvcApp.Tests\obj\Debug\net8.0\SimpleMvcApp.Tests.AssemblyInfoInputs.cache
+C:\SimpleMvcApp\tests\SimpleMvcApp.Tests\obj\Debug\net8.0\SimpleMvcApp.Tests.AssemblyInfo.cs
+C:\SimpleMvcApp\tests\SimpleMvcApp.Tests\obj\Debug\net8.0\SimpleMvcApp.Tests.csproj.CoreCompileInputs.cache
