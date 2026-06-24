@@ -1,119 +1,110 @@
 name: Simple MVC CI
 
 on:
-push:
-branches:
-- main
-- 'feature/**'
-pull_request:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
 
-build:
-name: Build
-runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+      - name: Restore
+        run: dotnet restore SimpleMvcApp.sln
 
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '8.0.x'
+      - name: Build
+        run: dotnet build SimpleMvcApp.sln --configuration Release --no-restore
 
-  - name: Restore
-    run: dotnet restore SimpleMvcApp.sln
+  unit-test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: build
 
-  - name: Build
-    run: dotnet build SimpleMvcApp.sln --configuration Release --no-restore
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-unit-test:
-name: Unit Test
-runs-on: ubuntu-latest
-needs: build
+      - name: Restore
+        run: dotnet restore SimpleMvcApp.sln
 
+      - name: Test
+        run: dotnet test SimpleMvcApp.sln --configuration Release
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+  fs-scan:
+    name: Filesystem Security Scan
+    runs-on: ubuntu-latest
+    needs: unit-test
 
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '8.0.x'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Restore
-    run: dotnet restore SimpleMvcApp.sln
+      - name: Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
 
-  - name: Test
-    run: dotnet test SimpleMvcApp.sln --configuration Release
+  docker:
+    name: Docker Build & Scan
+    runs-on: ubuntu-latest
+    needs: fs-scan
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-fs-scan:
-name: Filesystem Security Scan
-runs-on: ubuntu-latest
-needs: unit-test
+      - name: Docker Build
+        run: docker build -t simplemvcapp:${{ github.sha }} .
 
+      - name: Trivy Image Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: simplemvcapp:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 0
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+  publish:
+    name: Publish Artifact
+    runs-on: ubuntu-latest
+    needs: docker
 
-  - name: Trivy Filesystem Scan
-    uses: aquasecurity/trivy-action@master
-    with:
-      scan-type: fs
-      scan-ref: .
-      severity: HIGH,CRITICAL
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-docker:
-name: Docker Build & Scan
-runs-on: ubuntu-latest
-needs: fs-scan
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
+      - name: Publish
+        run: |
+          dotnet publish src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj \
+            --configuration Release \
+            --output ./publish
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-
-  - name: Docker Build
-    run: docker build -t simplemvcapp:${{ github.sha }} .
-
-  - name: Trivy Image Scan
-    uses: aquasecurity/trivy-action@master
-    with:
-      image-ref: simplemvcapp:${{ github.sha }}
-      format: table
-      severity: HIGH,CRITICAL
-      exit-code: 0
-
-
-publish:
-name: Publish Artifact
-runs-on: ubuntu-latest
-needs: docker
-
-
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-
-  - name: Setup .NET
-    uses: actions/setup-dotnet@v4
-    with:
-      dotnet-version: '8.0.x'
-
-  - name: Publish
-    run: |
-      dotnet publish src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj \
-        --configuration Release \
-        --output ./publish
-
-  - name: Upload Artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: simplemvcapp-publish
-      path: ./publish
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simplemvcapp-publish
+          path: ./publish
