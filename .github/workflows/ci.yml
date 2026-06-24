@@ -1,58 +1,7 @@
-name: CI
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.x
-      - run: dotnet restore ./SimpleMvcApp.sln
-      - run: dotnet build ./SimpleMvcApp.sln --configuration Release --no-restore
-      - uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          path: .
-          exit-code: 1
-          severity: HIGH,CRITICAL
-          format: table
-      - run: dotnet publish ./src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj -c Release -o ./publish
-      - uses: actions/upload-artifact@v4
-        with:
-          name: publish
-          path: ./publish
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.x
-      - run: dotnet test ./tests/SimpleMvcApp.Tests/SimpleMvcApp.Tests.csproj --configuration Release --no-build --verbosity normal
-      - name: Upload Test Results
+      - name: Claude Code Review
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: claude-ai/claude-code-review@v1
         with:
-          name: TestResults
-          path: tests/**/*.trx
-  upload_artifact:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download built application
-        uses: actions/download-artifact@v4
-        with:
-          name: publish
-          path: ./publish
-      - uses: actions/upload-artifact@v4
-        with:
-          name: SimpleMvcApp
-          path: ./publish
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sharp-issues: true
+          comment-on-pr: false
