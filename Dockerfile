@@ -8,18 +8,14 @@ ENV ASPNETCORE_URLS=http://+:80
 
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-COPY src/SimpleMvcApp.Web/*.csproj ./SimpleMvcApp.Web/
-COPY src/SimpleMvcApp.Web/*.csproj ./src/SimpleMvcApp.Web/
-COPY src/SimpleMvcApp.Web/Program.cs ./src/SimpleMvcApp.Web/
-COPY src/SimpleMvcApp.Web/Program.csproj ./src/SimpleMvcApp.Web/
-# For other required files, copy all
-COPY src/SimpleMvcApp.Web/ ./src/SimpleMvcApp.Web/
-COPY src/SimpleMvcApp.Web/Views/ ./src/SimpleMvcApp.Web/Views/
-COPY src/SimpleMvcApp.Web/Controllers/ ./src/SimpleMvcApp.Web/Controllers/
-COPY src/SimpleMvcApp.Web/Services/ ./src/SimpleMvcApp.Web/Services/
+WORKDIR /app
 
+# Copy project files and restore packages
+COPY src/SimpleMvcApp.Web/*.csproj ./src/SimpleMvcApp.Web/
 RUN dotnet restore ./src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj
+
+# Copy everything else and build
+COPY src/SimpleMvcApp.Web/ ./src/SimpleMvcApp.Web/
 RUN dotnet publish ./src/SimpleMvcApp.Web/SimpleMvcApp.Web.csproj -c Release -o /app/publish
 
 # Runtime image
