@@ -1,0 +1,23 @@
+name: Security Agent
+
+on:
+  workflow_call:
+
+jobs:
+  security:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
