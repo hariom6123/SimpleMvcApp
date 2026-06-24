@@ -1,0 +1,5 @@
+C:\SimpleMvcApp\publish\SimpleMvcApp.Web.exe
+C:\SimpleMvcApp\publish\SimpleMvcApp.Web.dll
+C:\SimpleMvcApp\publish\SimpleMvcApp.Web.deps.json
+C:\SimpleMvcApp\publish\SimpleMvcApp.Web.runtimeconfig.json
+C:\SimpleMvcApp\publish\SimpleMvcApp.Web.pdb
